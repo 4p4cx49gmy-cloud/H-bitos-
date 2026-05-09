@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="H-bitos" />
+  <meta name="theme-color" content="#0f0f13" />
+  <title>H-bitos</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f0f13; --surface: #1a1a24; --surface2: #22222f;
+      --border: #2e2e3e; --accent: #7c6ff7; --accent2: #5de8c1;
+      --text: #e8e8f0; --muted: #888899; --danger: #f26a6a;
+      --radius: 16px; --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+      min-height: 100dvh; display: flex; justify-content: center;
+      padding: 28px 16px calc(32px + var(--safe-bottom));
+      -webkit-tap-highlight-color: transparent;
+    }
+    #app { width: 100%; max-width: 480px; }
+    header { text-align: center; margin-bottom: 28px; }
+    header h1 {
+      font-size: 2.6rem; font-weight: 900;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; letter-spacing: -1.5px;
+    }
+    .subtitle { color: var(--muted); font-size: 0.85rem; margin-top: 4px; text-transform: capitalize; }
+    .add-habit { margin-bottom: 18px; }
+    #add-form { display: flex; gap: 8px; }
+    #habit-input {
+      flex: 1; background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: var(--radius); color: var(--text); font-size: 1rem;
+      padding: 14px 16px; outline: none; -webkit-appearance: none; min-width: 0;
+    }
+    #habit-input:focus { border-color: var(--accent); }
+    #habit-input::placeholder { color: var(--muted); }
+    #habit-emoji {
+      background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: var(--radius); color: var(--text); font-size: 1.2rem;
+      padding: 0 10px; cursor: pointer; outline: none;
+      -webkit-appearance: none; min-width: 52px;
+    }
+    #add-form button[type="submit"] {
+      background: var(--accent); border: none; border-radius: var(--radius);
+      color: #fff; cursor: pointer; font-size: 1rem; font-weight: 700;
+      padding: 14px 20px; white-space: nowrap; min-width: 52px;
+    }
+    #add-form button[type="submit"]:active { opacity: 0.75; }
+    .progress-bar-section { margin-bottom: 20px; }
+    .progress-label { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--muted); margin-bottom: 6px; }
+    .progress-track { background: var(--surface2); border-radius: 99px; height: 8px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 99px; transition: width 0.4s ease; width: 0%; }
+    #habits-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .habit-item {
+      background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: var(--radius); display: flex; align-items: center;
+      gap: 12px; padding: 14px; animation: slideIn 0.2s ease;
+    }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+    .habit-item.done { border-color: var(--accent2); background: color-mix(in srgb, var(--accent2) 8%, var(--surface)); }
+    .habit-check {
+      appearance: none; -webkit-appearance: none;
+      width: 28px; height: 28px; border: 2px solid var(--border);
+      border-radius: 50%; cursor: pointer; flex-shrink: 0; position: relative;
+    }
+    .habit-check:checked { background: var(--accent2); border-color: var(--accent2); }
+    .habit-check:checked::after {
+      content: "\2713"; position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%); color: #0f0f13; font-size: 14px; font-weight: 900;
+    }
+    .habit-emoji { font-size: 1.5rem; line-height: 1; flex-shrink: 0; }
+    .habit-info { flex: 1; min-width: 0; }
+    .habit-name { font-size: 0.97rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .habit-item.done .habit-name { text-decoration: line-through; color: var(--muted); }
+    .habit-streak { font-size: 0.75rem; color: var(--muted); margin-top: 3px; }
+    .habit-streak.hot { color: #ffb347; }
+    .habit-del {
+      background: none; border: 1.5px solid var(--border); border-radius: 8px;
+      color: var(--muted); cursor: pointer; font-size: 0.85rem;
+      padding: 6px 9px; flex-shrink: 0; line-height: 1;
+    }
+    .habit-del:active { color: var(--danger); border-color: var(--danger); }
+    .empty-state { text-align: center; color: var(--muted); padding: 52px 0; line-height: 1.8; font-size: 0.95rem; }
+    .stats-section { margin-top: 32px; }
+    .stats-section h2 { font-size: 0.75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; }
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+    .stat-value { font-size: 1.7rem; font-weight: 900; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1; }
+    .stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+    #download-btn {
+      display: block; width: 100%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none; border-radius: var(--radius); color: #fff;
+      cursor: pointer; font-size: 1rem; font-weight: 700;
+      padding: 15px; text-align: center; margin-bottom: 20px;
+    }
+    #download-btn:active { opacity: 0.75; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>H-bitos</h1>
+    <p class="subtitle" id="date-display"></p>
+  </header>
+
+  <button id="download-btn">&#128229; Guardar app en el celular</button>
+
+  <section class="add-habit">
+    <form id="add-form">
+      <input id="habit-input" type="text" placeholder="Nuevo h&#225;bito&#8230;" maxlength="60" autocomplete="off" autocorrect="off" />
+      <select id="habit-emoji">
+        <option>&#9989;</option><option>&#128170;</option><option>&#128218;</option>
+        <option>&#127939;</option><option>&#129336;</option><option>&#128167;</option>
+        <option>&#127822;</option><option>&#128564;</option><option>&#127919;</option><option>&#127807;</option>
+      </select>
+      <button type="submit">+</button>
+    </form>
+  </section>
+
+  <section class="progress-bar-section" id="progress-section" style="display:none">
+    <div class="progress-label">
+      <span id="progress-text">0 / 0 hoy</span>
+      <span id="progress-pct">0%</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+  </section>
+
+  <ul id="habits-list"></ul>
+  <div class="empty-state" id="empty-state">Sin h&#225;bitos todav&#237;a.<br/>&#161;Agrega uno para empezar! &#128640;</div>
+
+  <section class="stats-section" id="stats-section" style="display:none">
+    <h2>Estad&#237;sticas</h2>
+    <div class="stats-grid" id="stats-grid"></div>
+  </section>
+</div>
+
+<script>
+  const KEY = "habitos_data";
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || { habits: [] }; } catch { return { habits: [] }; } };
+  const save = s => localStorage.setItem(KEY, JSON.stringify(s));
+  let state = load();
+
+  const todayKey = () => new Date().toISOString().slice(0, 10);
+  const yesterdayKey = () => { const d = new Date(); d.setDate(d.getDate()-1); return d.toISOString().slice(0,10); };
+
+  function formatDate(k) {
+    return new Date(k + "T12:00:00").toLocaleDateString("es-ES", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+  }
+
+  function computeStreak(h) {
+    if (!h.completedDays || !h.completedDays.length) return 0;
+    const days = [...h.completedDays].sort().reverse();
+    if (days[0] !== todayKey() && days[0] !== yesterdayKey()) return 0;
+    let s = 1;
+    for (let i = 1; i < days.length; i++) {
+      const diff = Math.round((new Date(days[i-1]+"T12:00:00") - new Date(days[i]+"T12:00:00")) / 86400000);
+      if (diff === 1) s++; else break;
+    }
+    return s;
+  }
+
+  function esc(s) {
+    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  function render() {
+    const today = todayKey();
+    const { habits } = state;
+    document.getElementById("empty-state").style.display = habits.length ? "none" : "block";
+    document.getElementById("progress-section").style.display = habits.length ? "block" : "none";
+    document.getElementById("stats-section").style.display = habits.length ? "block" : "none";
+    const done = habits.filter(h => h.completedDays.includes(today)).length;
+    const pct = habits.length ? Math.round(done / habits.length * 100) : 0;
+    document.getElementById("progress-text").textContent = done + " / " + habits.length + " hoy";
+    document.getElementById("progress-pct").textContent = pct + "%";
+    document.getElementById("progress-fill").style.width = pct + "%";
+    const list = document.getElementById("habits-list");
+    list.innerHTML = "";
+    habits.forEach(function(h) {
+      const isDone = h.completedDays.includes(today);
+      const s = computeStreak(h);
+      const streakLabel = s === 0 ? "Sin racha" : s === 1 ? "🔥 1 día seguido" : "🔥 " + s + " días seguidos";
+      const li = document.createElement("li");
+      li.className = "habit-item" + (isDone ? " done" : "");
+      li.innerHTML =
+        "<input type=\"checkbox\" class=\"habit-check\" " + (isDone ? "checked" : "") + " data-id=\"" + h.id + "\" />" +
+        "<span class=\"habit-emoji\">" + h.emoji + "</span>" +
+        "<div class=\"habit-info\"><div class=\"habit-name\">" + esc(h.name) + "</div>" +
+        "<div class=\"habit-streak" + (s >= 3 ? " hot" : "") + "\">" + streakLabel + "</div></div>" +
+        "<button class=\"habit-del\" data-del=\"" + h.id + "\" aria-label=\"Eliminar\">✕</button>";
+      list.appendChild(li);
+    });
+    const best = habits.reduce(function(m, h) { return Math.max(m, computeStreak(h)); }, 0);
+    const total = habits.reduce(function(sum, h) { return sum + h.completedDays.length; }, 0);
+    document.getElementById("stats-grid").innerHTML = [
+      { v: habits.length, l: "Hábitos" },
+      { v: done, l: "Completados hoy" },
+      { v: best, l: "🔥 Mejor racha" },
+      { v: total, l: "Total histórico" },
+    ].map(function(x) { return "<div class=\"stat-card\"><div class=\"stat-value\">" + x.v + "</div><div class=\"stat-label\">" + x.l + "</div></div>"; }).join("");
+  }
+
+  document.getElementById("add-form").addEventListener("submit", function(e) {
+    e.preventDefault();
+    const input = document.getElementById("habit-input");
+    const name = input.value.trim();
+    if (!name) return;
+    state.habits.push({ id: Date.now().toString(), name: name, emoji: document.getElementById("habit-emoji").value, completedDays: [], createdAt: todayKey() });
+    save(state); input.value = ""; render();
+  });
+
+  document.getElementById("habits-list").addEventListener("change", function(e) {
+    if (!e.target.classList.contains("habit-check")) return;
+    const h = state.habits.find(function(x) { return x.id === e.target.dataset.id; });
+    if (!h) return;
+    const today = todayKey(), idx = h.completedDays.indexOf(today);
+    if (idx === -1) h.completedDays.push(today); else h.completedDays.splice(idx, 1);
+    save(state); render();
+  });
+
+  document.getElementById("habits-list").addEventListener("click", function(e) {
+    const btn = e.target.closest("[data-del]");
+    if (!btn) return;
+    const habit = state.habits.find(function(h) { return h.id === btn.dataset.del; });
+    if (!confirm("¿Eliminar \"" + (habit ? habit.name : "") + "\"?")) return;
+    state.habits = state.habits.filter(function(h) { return h.id !== btn.dataset.del; });
+    save(state); render();
+  });
+
+  document.getElementById("download-btn").addEventListener("click", function() {
+    const html = document.documentElement.outerHTML;
+    const blob = new Blob(["<!DOCTYPE html>\n" + html], { type: "text/html" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "H-bitos.html";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  document.getElementById("date-display").textContent = formatDate(todayKey());
+  render();
+<\/script>
+</body>
+</html>
