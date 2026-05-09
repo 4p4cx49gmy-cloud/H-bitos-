@@ -297,6 +297,27 @@
       padding: 4px 6px !important;
       cursor: pointer;
     }
+
+    /* ── Botón descargar ── */
+    #download-btn {
+      position: fixed;
+      bottom: calc(20px + var(--safe-bottom));
+      right: 18px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none;
+      border-radius: 50px;
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 13px 20px;
+      box-shadow: 0 4px 20px rgba(124,111,247,0.45);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      z-index: 100;
+    }
+    #download-btn:active { opacity: 0.8; transform: scale(0.96); }
   </style>
 </head>
 <body>
@@ -342,6 +363,8 @@
     <div class="stats-grid" id="stats-grid"></div>
   </section>
 </div>
+
+<button id="download-btn">📥 Guardar app</button>
 
 <script>
   const KEY = "habitos_data";
@@ -464,6 +487,17 @@
 
   document.getElementById("install-close").addEventListener("click", () => {
     document.getElementById("install-banner").style.display = "none";
+  });
+
+  // ── Descargar app ──
+  document.getElementById("download-btn").addEventListener("click", () => {
+    const html = document.documentElement.outerHTML;
+    const blob = new Blob(["<!DOCTYPE html>\n" + html], { type: "text/html" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "H-bitos.html";
+    a.click();
+    URL.revokeObjectURL(a.href);
   });
 
   // ── Init ──
