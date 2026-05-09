@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>H-bitos</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>H-bitos</h1>
+      <p class="subtitle" id="date-display"></p>
+    </header>
+
+    <section class="add-habit">
+      <form id="add-form">
+        <input
+          type="text"
+          id="habit-input"
+          placeholder="Nuevo hábito…"
+          maxlength="60"
+          autocomplete="off"
+        />
+        <select id="habit-emoji">
+          <option value="✅">✅</option>
+          <option value="💪">💪</option>
+          <option value="📚">📚</option>
+          <option value="🏃">🏃</option>
+          <option value="🧘">🧘</option>
+          <option value="💧">💧</option>
+          <option value="🍎">🍎</option>
+          <option value="😴">😴</option>
+          <option value="🎯">🎯</option>
+          <option value="🌱">🌱</option>
+        </select>
+        <button type="submit">Agregar</button>
+      </form>
+    </section>
+
+    <section class="progress-bar-section" id="progress-section" style="display:none">
+      <div class="progress-label">
+        <span id="progress-text">0 / 0 hoy</span>
+        <span id="progress-pct">0%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </section>
+
+    <ul id="habits-list"></ul>
+
+    <div class="empty-state" id="empty-state">
+      <p>No hay hábitos todavía.<br />¡Agrega uno para empezar!</p>
+    </div>
+
+    <section class="stats-section" id="stats-section" style="display:none">
+      <h2>Estadísticas</h2>
+      <div class="stats-grid" id="stats-grid"></div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
