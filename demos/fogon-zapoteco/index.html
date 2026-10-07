@@ -20,11 +20,11 @@
     --cempa: #f29e1f;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--mole); color: var(--cal); font-family: Inter, system-ui, sans-serif; overflow-x: hidden; }
+  body { background: var(--mole); color: var(--cal); font-family: Inter, system-ui, sans-serif; overflow-x: hidden; overflow-x: clip; }
   h1, h2, h3 { font-family: Fraunces, Georgia, serif; line-height: 1; }
 
   .demo {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    position: relative; z-index: 50;
     background: var(--cal); color: var(--mole); font-size: 12px; text-align: center; padding: 6px 16px;
   }
 
