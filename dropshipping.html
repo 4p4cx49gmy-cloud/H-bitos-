@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f0f13" />
+  <title>Panel Dropshipping</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f0f13; --surface: #1a1a24; --surface2: #22222f;
+      --border: #2e2e3e; --accent: #7c6ff7; --accent2: #5de8c1;
+      --text: #e8e8f0; --muted: #888899; --danger: #f26a6a; --warn: #f2c46a;
+      --radius: 16px; --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+      min-height: 100dvh; display: flex; justify-content: center;
+      padding: 28px 16px calc(32px + var(--safe-bottom));
+      -webkit-tap-highlight-color: transparent;
+    }
+    #app { width: 100%; max-width: 640px; }
+    header { text-align: center; margin-bottom: 20px; }
+    header h1 {
+      font-size: 2.2rem; font-weight: 900; letter-spacing: -1px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .subtitle { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
+
+    .tabs { display: flex; gap: 6px; background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: var(--radius); padding: 5px; margin-bottom: 18px; }
+    .tabs button { flex: 1; background: none; border: none; color: var(--muted); font-size: 0.9rem;
+      font-weight: 700; padding: 10px 6px; border-radius: 12px; cursor: pointer; }
+    .tabs button.active { background: var(--accent); color: #fff; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .card { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius);
+      padding: 16px; margin-bottom: 14px; }
+    .card h2 { font-size: 1rem; margin-bottom: 12px; }
+    .card p.hint { color: var(--muted); font-size: 0.78rem; margin-top: 8px; line-height: 1.4; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    label { display: flex; flex-direction: column; gap: 4px; font-size: 0.75rem; color: var(--muted); }
+    input, select {
+      background: var(--surface2); border: 1.5px solid var(--border); border-radius: 12px;
+      color: var(--text); font-size: 0.95rem; padding: 10px 12px; outline: none; width: 100%;
+      -webkit-appearance: none; min-width: 0;
+    }
+    input:focus, select:focus { border-color: var(--accent); }
+    .check-row { flex-direction: row; align-items: center; gap: 8px; grid-column: 1 / -1; }
+    .check-row input { width: 18px; height: 18px; -webkit-appearance: checkbox; appearance: auto; accent-color: var(--accent); }
+
+    .results { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat { background: var(--surface2); border-radius: 12px; padding: 12px; }
+    .stat .k { font-size: 0.72rem; color: var(--muted); }
+    .stat .v { font-size: 1.25rem; font-weight: 800; margin-top: 2px; }
+    .stat.big { grid-column: 1 / -1; }
+    .stat.big .v { font-size: 1.8rem; }
+    .stat .v small { display: block; font-size: 0.75rem; font-weight: 400; color: var(--muted); }
+    .good { color: var(--accent2); } .bad { color: var(--danger); } .meh { color: var(--warn); }
+    .breakdown { width: 100%; font-size: 0.82rem; border-collapse: collapse; margin-top: 12px; }
+    .breakdown td { padding: 5px 0; border-bottom: 1px solid var(--border); }
+    .breakdown td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+
+    .diag li { list-style: none; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.88rem; line-height: 1.4; }
+    .diag li:last-child { border-bottom: none; }
+    .tag { display: inline-block; font-size: 0.68rem; font-weight: 800; padding: 2px 8px; border-radius: 99px; margin-right: 6px; }
+    .tag.bad { background: rgba(242,106,106,.15); } .tag.meh { background: rgba(242,196,106,.15); } .tag.good { background: rgba(93,232,193,.15); }
+    .copy { background: var(--surface2); border-radius: 10px; padding: 10px; font-size: 0.82rem; margin-top: 6px; cursor: pointer; }
+    .copy small { display: block; color: var(--muted); margin-top: 4px; }
+
+    .checklist label { flex-direction: row; align-items: flex-start; gap: 10px; color: var(--text);
+      font-size: 0.9rem; padding: 9px 0; border-bottom: 1px solid var(--border); cursor: pointer; line-height: 1.35; }
+    .checklist label:last-child { border-bottom: none; }
+    .checklist input { width: 20px; height: 20px; flex-shrink: 0; -webkit-appearance: checkbox; accent-color: var(--accent); }
+    .checklist input:checked + span { color: var(--muted); text-decoration: line-through; }
+    .progress-track { background: var(--surface2); border-radius: 99px; height: 8px; overflow: hidden; margin-bottom: 6px; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); width: 0; transition: width .3s; }
+    .progress-label { font-size: 0.78rem; color: var(--muted); margin-bottom: 10px; }
+
+    .btn { background: var(--accent); border: none; border-radius: 12px; color: #fff; cursor: pointer;
+      font-size: 0.95rem; font-weight: 700; padding: 12px 16px; }
+    .btn.ghost { background: var(--surface2); color: var(--text); }
+    .btn:active { opacity: .75; }
+    .row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .row .btn { flex: 1; }
+
+    .counts { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    .counts span { background: var(--surface2); border-radius: 99px; padding: 4px 10px; font-size: 0.75rem; color: var(--muted); }
+    .counts b { color: var(--text); }
+    .order { background: var(--surface2); border-radius: 12px; padding: 12px; margin-bottom: 8px; }
+    .order.late { border: 1.5px solid var(--danger); }
+    .order .top { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+    .order .top strong { font-size: 0.95rem; }
+    .order .meta { font-size: 0.78rem; color: var(--muted); margin-top: 4px; line-height: 1.5; word-break: break-word; }
+    .order .actions { display: flex; gap: 6px; margin-top: 8px; }
+    .order select { padding: 6px 10px; font-size: 0.8rem; }
+    .order .del { background: none; border: 1.5px solid var(--border); color: var(--danger); border-radius: 10px;
+      padding: 6px 10px; cursor: pointer; font-size: 0.8rem; }
+    .empty { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 18px 0; }
+    .toast { position: fixed; left: 50%; bottom: calc(24px + var(--safe-bottom)); transform: translateX(-50%);
+      background: var(--accent2); color: #0f0f13; font-weight: 700; padding: 10px 16px; border-radius: 99px;
+      font-size: 0.85rem; opacity: 0; transition: opacity .2s; pointer-events: none; }
+    .toast.show { opacity: 1; }
+    @media (max-width: 420px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>Dropshipping</h1>
+    <p class="subtitle">Panel para tu tienda Shopify · precios en MXN</p>
+  </header>
+
+  <nav class="tabs">
+    <button data-tab="calc" class="active">Rentabilidad</button>
+    <button data-tab="launch">Lanzamiento</button>
+    <button data-tab="orders">Pedidos</button>
+  </nav>
+
+  <!-- ===== RENTABILIDAD ===== -->
+  <section id="calc" class="panel active">
+    <div class="card">
+      <h2>Producto</h2>
+      <div class="grid">
+        <label>Precio de venta<input type="number" inputmode="decimal" id="price" value="449" /></label>
+        <label>Precio tachado (antes)<input type="number" inputmode="decimal" id="compare" value="699" /></label>
+        <label>Costo con el proveedor<input type="number" inputmode="decimal" id="cost" value="160" /></label>
+        <label>Envío del proveedor<input type="number" inputmode="decimal" id="ship" value="90" /></label>
+        <label>Envío que cobras al cliente<input type="number" inputmode="decimal" id="shipCharged" value="0" /></label>
+        <label>Costo por venta en anuncios (CPA)<input type="number" inputmode="decimal" id="cpa" value="120" /></label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Comisiones y riesgos</h2>
+      <div class="grid">
+        <label>Comisión de pago (%)<input type="number" inputmode="decimal" id="feePct" value="3.6" step="0.1" /></label>
+        <label>Comisión fija por pedido<input type="number" inputmode="decimal" id="feeFixed" value="3" /></label>
+        <label>Comisión extra Shopify (%)<input type="number" inputmode="decimal" id="extraPct" value="0" step="0.1" /></label>
+        <label>Devoluciones / reembolsos (%)<input type="number" inputmode="decimal" id="refund" value="5" step="0.5" /></label>
+        <label>Margen neto objetivo (%)<input type="number" inputmode="decimal" id="target" value="20" /></label>
+        <label class="check-row"><input type="checkbox" id="iva" checked /> Sumar IVA 16% a las comisiones</label>
+      </div>
+      <p class="hint">Revisa tu tarifa real en Shopify → Configuración → Pagos. La "comisión extra" es la que cobra Shopify en el plan Basic (2%) si usas otra pasarela en vez de Shopify Payments; si usas Shopify Payments déjala en 0.</p>
+    </div>
+
+    <div class="card">
+      <h2>Resultado por venta</h2>
+      <div class="results">
+        <div class="stat big"><div class="k">Ganancia neta por venta</div><div class="v" id="rNet">—</div></div>
+        <div class="stat"><div class="k">Margen neto</div><div class="v" id="rMargin">—</div></div>
+        <div class="stat"><div class="k">ROAS de equilibrio</div><div class="v" id="rRoas">—</div></div>
+        <div class="stat"><div class="k">CPA máximo (sin perder)</div><div class="v" id="rMaxCpa">—</div></div>
+        <div class="stat"><div class="k">Descuento mostrado</div><div class="v" id="rDisc">—</div></div>
+        <div class="stat big"><div class="k">Precio sugerido para tu margen objetivo</div><div class="v" id="rSuggest">—</div></div>
+      </div>
+      <table class="breakdown" id="breakdown"></table>
+      <p class="hint">ROAS de equilibrio = cuánto tienes que vender por cada $1 de anuncios para no perder. Si tu ROAS en Meta/TikTok está abajo de ese número, ese anuncio te cuesta dinero. Las devoluciones se cuentan como reembolso completo (en dropshipping casi nunca recuperas el producto).</p>
+    </div>
+  </section>
+
+  <!-- ===== LANZAMIENTO ===== -->
+  <section id="launch" class="panel">
+    <div class="card">
+      <h2>Diagnóstico de tu tienda (23 oct 2026)</h2>
+      <ul class="diag">
+        <li><span class="tag bad">URGENTE</span>La <b>Lonchera Eléctrica 3 en 1</b> no está publicada en la Tienda online: nadie la puede ver ni comprar. Productos → Lonchera → Publicación → marca "Tienda online".</li>
+        <li><span class="tag bad">URGENTE</span>No tiene ninguna foto. Sube mínimo 5: producto solo, abierto con comida, en el coche/oficina, el kit completo y una con medidas.</li>
+        <li><span class="tag meh">MEJORA</span>Sin precio tachado. Pon "Precio de comparación" (ej. $699) para que se vea la oferta.</li>
+        <li><span class="tag meh">MEJORA</span>Sin "Costo por artículo". Captura lo que te cobra el proveedor para que Shopify te muestre tu ganancia real en los reportes.</li>
+        <li><span class="tag meh">MEJORA</span>Peso en 0 kg. Si cobras envío por peso, las tarifas saldrán mal; pon ~1.2 kg.</li>
+        <li><span class="tag meh">MEJORA</span>Sin título ni descripción SEO (abajo tienes unos listos para copiar).</li>
+        <li><span class="tag good">BIEN</span>La descripción ya está muy completa (beneficios, para quién, qué incluye, cómo usarla) y el inventario no se rastrea, así que no se bloquea la venta por "agotado".</li>
+      </ul>
+      <div class="copy" data-copy="Lonchera Eléctrica 3 en 1 | Come Caliente en la Oficina o el Coche">
+        Lonchera Eléctrica 3 en 1 | Come Caliente en la Oficina o el Coche
+        <small>Título SEO · toca para copiar</small>
+      </div>
+      <div class="copy" data-copy="Calienta tu comida en minutos en la escuela, la oficina o el coche. Kit con bolsa térmica, cubiertos y adaptador para auto. Envío a todo México.">
+        Calienta tu comida en minutos en la escuela, la oficina o el coche. Kit con bolsa térmica, cubiertos y adaptador para auto. Envío a todo México.
+        <small>Descripción SEO · toca para copiar</small>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Checklist antes de meter anuncios</h2>
+      <div class="progress-track"><div class="progress-fill" id="launchFill"></div></div>
+      <div class="progress-label" id="launchLabel"></div>
+      <div class="checklist" id="checklist"></div>
+      <p class="hint">Se guarda en este navegador.</p>
+    </div>
+  </section>
+
+  <!-- ===== PEDIDOS ===== -->
+  <section id="orders" class="panel">
+    <div class="card">
+      <h2>Nuevo pedido</h2>
+      <form id="orderForm" class="grid">
+        <label>Pedido Shopify<input id="oShop" placeholder="#1001" required /></label>
+        <label>Cliente<input id="oClient" placeholder="Nombre" /></label>
+        <label>Producto<input id="oProduct" value="Lonchera Eléctrica 3 en 1" /></label>
+        <label>Proveedor<input id="oSupplier" placeholder="AliExpress, CJ, Dropi…" /></label>
+        <label>Pedido al proveedor<input id="oSupOrder" placeholder="Nº de orden" /></label>
+        <label>Guía / rastreo<input id="oTracking" placeholder="Nº de guía" /></label>
+        <label style="grid-column:1/-1"><button class="btn" type="submit">Agregar pedido</button></label>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Mis pedidos</h2>
+      <div class="counts" id="counts"></div>
+      <div id="orderList"></div>
+      <div class="row">
+        <button class="btn ghost" id="exportCsv">Exportar CSV</button>
+      </div>
+      <p class="hint">Un pedido se marca en rojo si lleva más de 15 días sin entregarse: escríbele al cliente antes de que abra una disputa. Los pedidos se guardan solo en este navegador; exporta el CSV seguido como respaldo.</p>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const KEY = 'dropshipping_state_v1';
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } };
+  const state = Object.assign({ calc: {}, checks: {}, orders: [] }, load());
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} };
+  const $ = id => document.getElementById(id);
+  const money = n => (n < 0 ? '-$' : '$') + Math.abs(n).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  function toast(msg) {
+    const t = $('toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toast.timer); toast.timer = setTimeout(() => t.classList.remove('show'), 1600);
+  }
+
+  // ---------- Tabs ----------
+  document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('active', x === b));
+    document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === b.dataset.tab));
+  }));
+
+  // ---------- Rentabilidad ----------
+  const fields = ['price', 'compare', 'cost', 'ship', 'shipCharged', 'cpa', 'feePct', 'feeFixed', 'extraPct', 'refund', 'target'];
+  fields.forEach(f => { if (state.calc[f] !== undefined) $(f).value = state.calc[f]; });
+  if (state.calc.iva !== undefined) $('iva').checked = state.calc.iva;
+
+  function calc() {
+    const v = {}; fields.forEach(f => { v[f] = parseFloat($(f).value) || 0; });
+    const ivaMult = $('iva').checked ? 1.16 : 1;
+    state.calc = { ...v, iva: $('iva').checked }; save();
+
+    const revenue = v.price + v.shipCharged;
+    const payFee = (revenue * v.feePct / 100 + v.feeFixed) * ivaMult;
+    const extraFee = revenue * v.extraPct / 100;
+    const refundLoss = revenue * v.refund / 100;
+    const beforeAds = revenue - payFee - extraFee - refundLoss - v.cost - v.ship;
+    const net = beforeAds - v.cpa;
+    const margin = revenue ? net / revenue * 100 : 0;
+
+    $('rNet').textContent = money(net);
+    $('rNet').className = 'v ' + (net > 0 ? 'good' : 'bad');
+    $('rMargin').textContent = margin.toFixed(1) + '%';
+    $('rMargin').className = 'v ' + (margin >= 20 ? 'good' : margin > 0 ? 'meh' : 'bad');
+    $('rRoas').textContent = beforeAds > 0 ? (revenue / beforeAds).toFixed(2) + 'x' : 'imposible';
+    $('rMaxCpa').textContent = money(Math.max(beforeAds, 0));
+    $('rDisc').textContent = v.compare > v.price ? Math.round((1 - v.price / v.compare) * 100) + '% OFF' : 'sin oferta';
+
+    // Precio que deja el margen objetivo: despeja R en  R·(1 − %comisiones − %devol − %objetivo) = costos fijos
+    const pctOut = v.feePct / 100 * ivaMult + v.extraPct / 100 + v.refund / 100 + v.target / 100;
+    const fixedOut = v.cost + v.ship + v.cpa + v.feeFixed * ivaMult;
+    if (pctOut < 1) {
+      const p = fixedOut / (1 - pctOut) - v.shipCharged;
+      const nice = Math.ceil(p / 10) * 10 - 1; // termina en 9
+      $('rSuggest').textContent = money(Math.max(nice, 0));
+      $('rSuggest').insertAdjacentHTML('beforeend', `<small>exacto ${money(p)}</small>`);
+    } else {
+      $('rSuggest').textContent = 'margen inalcanzable';
+    }
+
+    $('breakdown').innerHTML = [
+      ['Lo que paga el cliente', revenue],
+      ['Producto (proveedor)', -v.cost],
+      ['Envío (proveedor)', -v.ship],
+      ['Comisión de pago' + (ivaMult > 1 ? ' + IVA' : ''), -payFee],
+      ['Comisión extra Shopify', -extraFee],
+      ['Devoluciones (promedio)', -refundLoss],
+      ['Anuncios (CPA)', -v.cpa],
+      ['Te queda', net],
+    ].map(([k, n]) => `<tr><td>${k}</td><td>${money(n)}</td></tr>`).join('');
+  }
+  fields.concat('iva').forEach(f => $(f).addEventListener('input', calc));
+  calc();
+
+  // ---------- Checklist ----------
+  const CHECKS = [
+    'Producto publicado en el canal "Tienda online"',
+    'Mínimo 5 fotos (y de preferencia un video corto) del producto',
+    'Precio de comparación (tachado) configurado',
+    '"Costo por artículo" capturado en Shopify',
+    'Peso del producto capturado (para tarifas de envío)',
+    'Título y descripción SEO llenados',
+    'Tiempo de entrega real visible en la página (ej. "llega en 7–12 días hábiles")',
+    'Políticas de envío, reembolso y privacidad en Configuración → Políticas',
+    'Página de contacto + WhatsApp visible',
+    'Shopify Payments (o Mercado Pago) activo y pago de prueba hecho',
+    'Tarifas de envío configuradas (o envío gratis incluido en el precio)',
+    'Dominio propio conectado (no solo .myshopify.com)',
+    'Contraseña de la tienda quitada (plan activo)',
+    'Muestra del producto pedida al proveedor para revisar calidad y tiempos',
+    'Píxel de Meta / TikTok instalado desde la app del canal',
+  ];
+  function renderChecks() {
+    $('checklist').innerHTML = CHECKS.map((c, i) =>
+      `<label><input type="checkbox" data-i="${i}" ${state.checks[i] ? 'checked' : ''}/><span>${c}</span></label>`).join('');
+    const done = CHECKS.filter((_, i) => state.checks[i]).length;
+    $('launchFill').style.width = (done / CHECKS.length * 100) + '%';
+    $('launchLabel').textContent = `${done} de ${CHECKS.length} listos` + (done === CHECKS.length ? ' · ¡a vender!' : '');
+  }
+  $('checklist').addEventListener('change', e => {
+    if (!e.target.dataset.i) return;
+    state.checks[e.target.dataset.i] = e.target.checked; save(); renderChecks();
+  });
+  renderChecks();
+
+  document.querySelectorAll('.copy').forEach(el => el.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(el.dataset.copy); toast('Copiado'); }
+    catch { toast('No se pudo copiar'); }
+  }));
+
+  // ---------- Pedidos ----------
+  const STATUSES = ['Nuevo', 'Pedido al proveedor', 'Enviado', 'Entregado', 'Problema'];
+  const LATE_DAYS = 15;
+  const isLate = o => o.status !== 'Entregado' && (Date.now() - o.created) / 86400000 > LATE_DAYS;
+
+  function renderOrders() {
+    const counts = STATUSES.map(s => `<span>${s}: <b>${state.orders.filter(o => o.status === s).length}</b></span>`);
+    const late = state.orders.filter(isLate).length;
+    if (late) counts.push(`<span class="bad">Atrasados: <b>${late}</b></span>`);
+    $('counts').innerHTML = counts.join('');
+
+    if (!state.orders.length) { $('orderList').innerHTML = '<div class="empty">Aún no hay pedidos</div>'; return; }
+    $('orderList').innerHTML = state.orders.slice().sort((a, b) => b.created - a.created).map(o => {
+      const days = Math.floor((Date.now() - o.created) / 86400000);
+      return `<div class="order ${isLate(o) ? 'late' : ''}">
+        <div class="top"><strong>${esc(o.shop)} · ${esc(o.client || 'Sin nombre')}</strong><span class="meta">hace ${days} d</span></div>
+        <div class="meta">${esc(o.product)}${o.supplier ? ' · ' + esc(o.supplier) : ''}${o.supOrder ? ' #' + esc(o.supOrder) : ''}<br>
+          Guía: ${o.tracking ? esc(o.tracking) : '—'}</div>
+        <div class="actions">
+          <select data-id="${o.id}">${STATUSES.map(s => `<option ${s === o.status ? 'selected' : ''}>${s}</option>`).join('')}</select>
+          <button class="del" data-del="${o.id}">Borrar</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  $('orderForm').addEventListener('submit', e => {
+    e.preventDefault();
+    state.orders.push({
+      id: Date.now().toString(36), created: Date.now(), status: 'Nuevo',
+      shop: $('oShop').value.trim(), client: $('oClient').value.trim(), product: $('oProduct').value.trim(),
+      supplier: $('oSupplier').value.trim(), supOrder: $('oSupOrder').value.trim(), tracking: $('oTracking').value.trim(),
+    });
+    save(); renderOrders();
+    ['oShop', 'oClient', 'oSupOrder', 'oTracking'].forEach(id => { $(id).value = ''; });
+    toast('Pedido agregado');
+  });
+  $('orderList').addEventListener('change', e => {
+    const o = state.orders.find(x => x.id === e.target.dataset.id);
+    if (o) { o.status = e.target.value; save(); renderOrders(); }
+  });
+  $('orderList').addEventListener('click', e => {
+    const id = e.target.dataset.del;
+    if (id && confirm('¿Borrar este pedido?')) { state.orders = state.orders.filter(o => o.id !== id); save(); renderOrders(); }
+  });
+  $('exportCsv').addEventListener('click', () => {
+    const cols = ['shop', 'client', 'product', 'supplier', 'supOrder', 'tracking', 'status'];
+    const rows = [['Pedido', 'Cliente', 'Producto', 'Proveedor', 'Pedido proveedor', 'Guía', 'Estado', 'Fecha']]
+      .concat(state.orders.map(o => cols.map(c => o[c]).concat(new Date(o.created).toLocaleDateString('es-MX'))));
+    const csv = rows.map(r => r.map(x => '"' + String(x ?? '').replace(/"/g, '""') + '"').join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv' }));
+    a.download = 'pedidos-dropshipping.csv'; a.click();
+  });
+  renderOrders();
+})();
+</script>
+</body>
+</html>
