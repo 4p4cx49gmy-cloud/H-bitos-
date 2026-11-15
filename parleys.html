@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parleys — Calculadora y registro</title>
+<style>
+  :root {
+    --bg: #080b14; --bg2: #0d1120; --bg3: #131929; --bg4: #1a2235;
+    --border: #1e2d47; --green: #00e676; --green2: #00c853; --blue: #2196f3;
+    --yellow: #ffd600; --red: #f44336; --text: #e8edf5; --text2: #8fa3bf; --text3: #5a7090;
+    --radius: 12px; --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 14px; min-height: 100vh; overflow-x: hidden;
+  }
+  .header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(8,11,20,0.92); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px; height: 56px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .logo {
+    font-size: 20px; font-weight: 700; letter-spacing: -0.5px; white-space: nowrap;
+    background: linear-gradient(135deg, var(--green), var(--blue));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .nav-link {
+    color: var(--text2); text-decoration: none; font-size: 12px;
+    border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px; white-space: nowrap;
+  }
+  .nav-link:hover { color: var(--text); border-color: var(--blue); }
+  .main { max-width: 900px; margin: 0 auto; padding: 16px; padding-bottom: 80px; }
+  .card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); margin-bottom: 12px; padding: 16px;
+  }
+  .card h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+  .hint { color: var(--text3); font-size: 12px; line-height: 1.5; }
+  .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .field label { font-size: 12px; color: var(--text2); font-weight: 500; }
+  input, select {
+    background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    color: var(--text); padding: 9px 12px; font-size: 16px; outline: none; width: 100%;
+  }
+  input:focus, select:focus { border-color: var(--blue); }
+  input::placeholder { color: var(--text3); }
+  input.bad { border-color: var(--red); }
+
+  .leg {
+    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 8px;
+    align-items: end; padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .leg:last-of-type { border-bottom: none; }
+  .leg-meta { grid-column: 1 / -1; font-size: 12px; color: var(--text3); }
+  .leg-meta b { color: var(--text2); font-weight: 600; }
+  @media (max-width: 640px) {
+    .leg { grid-template-columns: 1fr 1fr; }
+    .leg .f-desc { grid-column: 1 / -1; }
+  }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 10px 16px; border-radius: var(--radius-sm); border: none;
+    font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: linear-gradient(135deg, var(--green2), var(--green)); color: #000; }
+  .btn-secondary { background: var(--bg3); border: 1px solid var(--border); color: var(--text); }
+  .btn-secondary:hover { border-color: var(--blue); }
+  .btn-x { background: transparent; border: 1px solid var(--border); color: var(--text3); padding: 9px 12px; }
+  .btn-x:hover { color: var(--red); border-color: var(--red); }
+  .btn-sm { padding: 6px 10px; font-size: 12px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; margin-top: 12px; }
+  .row .field { flex: 1 1 130px; }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  @media (max-width: 640px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+  .stat {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px; text-align: center; min-width: 0;
+  }
+  .stat-value { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .stat-label { font-size: 11px; color: var(--text3); margin-top: 4px; }
+  .green { color: var(--green); } .red { color: var(--red); }
+  .yellow { color: var(--yellow); } .blue { color: var(--blue); }
+
+  .notes { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+  .note {
+    font-size: 13px; line-height: 1.45; padding: 9px 12px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: var(--bg3); color: var(--text2);
+  }
+  .note.warn { border-color: color-mix(in srgb, var(--yellow) 50%, transparent); }
+  .note.bad { border-color: color-mix(in srgb, var(--red) 50%, transparent); }
+  .note.good { border-color: color-mix(in srgb, var(--green) 50%, transparent); }
+
+  .hist-item {
+    display: flex; gap: 10px; align-items: center; justify-content: space-between;
+    padding: 10px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap;
+  }
+  .hist-item:last-child { border-bottom: none; }
+  .hist-info { flex: 1 1 220px; min-width: 0; }
+  .hist-title { font-weight: 600; overflow-wrap: anywhere; }
+  .hist-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .hist-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pill { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; border: 1px solid currentColor; }
+  .empty { color: var(--text3); font-size: 13px; padding: 12px 0; }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">🎯 Parleys</div>
+  <a class="nav-link" href="arbitraje-ia.html">🤖 ArbiBot</a>
+</header>
+
+<div class="main">
+
+  <div class="card">
+    <h3>Arma tu parley</h3>
+    <p class="hint">
+      Copia cada momio tal como sale en Draftea: americano (<b>-110</b>, <b>+150</b>) o decimal (<b>1.91</b>).
+      Si pones el momio del lado contrario se calcula la probabilidad real sin el margen de la casa.
+      «Mi %» es tu propia estimación y manda sobre todo lo demás.
+    </p>
+    <div id="legs"></div>
+    <div class="row">
+      <button class="btn btn-secondary" onclick="addLeg()">＋ Agregar selección</button>
+      <button class="btn btn-secondary" onclick="clearLegs()">Limpiar</button>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Apuesta ($)</label>
+        <input type="number" id="stake" min="0" step="1" inputmode="decimal" oninput="onSettings()">
+      </div>
+      <div class="field">
+        <label>Bankroll ($)</label>
+        <input type="number" id="bankroll" min="0" step="1" inputmode="decimal" oninput="onSettings()">
+      </div>
+      <div class="field">
+        <label>Margen casa por selección (%)</label>
+        <input type="number" id="margin" min="0" max="30" step="0.5" inputmode="decimal" oninput="onSettings()">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Resultado</h3>
+    <div class="stats">
+      <div class="stat"><div class="stat-value blue" id="rOdds">—</div><div class="stat-label">Momio combinado</div></div>
+      <div class="stat"><div class="stat-value" id="rPayout">—</div><div class="stat-label">Cobro total</div></div>
+      <div class="stat"><div class="stat-value yellow" id="rProb">—</div><div class="stat-label">Prob. real de pegar</div></div>
+      <div class="stat"><div class="stat-value" id="rEv">—</div><div class="stat-label">Valor esperado</div></div>
+    </div>
+    <div class="notes" id="notes"></div>
+    <div class="row">
+      <button class="btn btn-primary" onclick="saveParlay()">💾 Guardar en historial</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Historial</h3>
+    <div class="stats" style="margin-bottom:12px;">
+      <div class="stat"><div class="stat-value" id="hRecord">0-0</div><div class="stat-label">Ganados-Perdidos</div></div>
+      <div class="stat"><div class="stat-value" id="hStaked">$0</div><div class="stat-label">Apostado</div></div>
+      <div class="stat"><div class="stat-value" id="hProfit">$0</div><div class="stat-label">Ganancia neta</div></div>
+      <div class="stat"><div class="stat-value" id="hRoi">—</div><div class="stat-label">ROI</div></div>
+    </div>
+    <div id="history"></div>
+  </div>
+
+  <p class="hint" style="text-align:center;margin-top:16px;">
+    Ningún cálculo garantiza un resultado. Apuesta solo lo que puedas perder. +18.
+  </p>
+</div>
+
+<script>
+const KEY = 'parleys_state';
+let state = { legs: [], stake: 100, bankroll: 1000, margin: 5, history: [] };
+
+function load() {
+  try { state = { ...state, ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch (e) {}
+  if (!Array.isArray(state.legs) || !state.legs.length) state.legs = [newLeg(), newLeg()];
+  if (!Array.isArray(state.history)) state.history = [];
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+function newLeg() { return { desc: '', odds: '', opp: '', mine: '' }; }
+
+// Convierte un momio (americano o decimal) a decimal. Devuelve null si no es válido.
+function toDecimal(raw) {
+  const s = String(raw ?? '').trim().replace(',', '.');
+  if (!s) return null;
+  const n = Number(s);
+  if (!isFinite(n)) return null;
+  if (/^[+-]/.test(s) || Math.abs(n) >= 100) {
+    if (Math.abs(n) < 100) return null;
+    return n > 0 ? 1 + n / 100 : 1 + 100 / Math.abs(n);
+  }
+  return n > 1 ? n : null;
+}
+function toAmerican(dec) {
+  if (!(dec > 1)) return '—';
+  return dec >= 2 ? '+' + Math.round((dec - 1) * 100) : String(Math.round(-100 / (dec - 1)));
+}
+
+// Probabilidad real de una selección y de dónde salió.
+function legProb(leg) {
+  const dec = toDecimal(leg.odds);
+  if (!dec) return null;
+  const implied = 1 / dec;
+  const mine = parseFloat(String(leg.mine).replace(',', '.'));
+  if (mine > 0 && mine < 100) return { dec, implied, p: mine / 100, src: 'tu estimación' };
+  const opp = toDecimal(leg.opp);
+  if (opp) return { dec, implied, p: implied / (implied + 1 / opp), src: 'sin margen (momio contrario)' };
+  const m = Math.max(0, Number(state.margin) || 0) / 100;
+  return { dec, implied, p: implied / (1 + m), src: 'margen supuesto' };
+}
+
+function calc() {
+  const legs = state.legs.map(legProb).filter(Boolean);
+  if (!legs.length) return null;
+  const dec = legs.reduce((a, l) => a * l.dec, 1);
+  const p = legs.reduce((a, l) => a * l.p, 1);
+  const stake = Math.max(0, Number(state.stake) || 0);
+  const ev = p * dec - 1;
+  const kelly = ev > 0 ? ev / (dec - 1) : 0;
+  return { n: legs.length, dec, p, stake, ev, kelly, payout: stake * dec };
+}
+
+const money = n => '$' + (Math.round(n * 100) / 100).toLocaleString('es-MX', { maximumFractionDigits: 2 });
+const pct = (n, d = 1) => (n * 100).toFixed(d) + '%';
+const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+function renderLegs() {
+  const box = document.getElementById('legs');
+  box.innerHTML = state.legs.map((l, i) => `
+    <div class="leg">
+      <div class="field f-desc"><label>Selección ${i + 1}</label>
+        <input type="text" value="${esc(l.desc)}" placeholder="Ej. América gana" oninput="setLeg(${i},'desc',this.value)"></div>
+      <div class="field"><label>Momio</label>
+        <input type="text" value="${esc(l.odds)}" placeholder="-110" inputmode="text" oninput="setLeg(${i},'odds',this.value)" data-k="odds" data-i="${i}"></div>
+      <div class="field"><label>Momio contrario</label>
+        <input type="text" value="${esc(l.opp)}" placeholder="opcional" oninput="setLeg(${i},'opp',this.value)" data-k="opp" data-i="${i}"></div>
+      <div class="field"><label>Mi %</label>
+        <input type="text" value="${esc(l.mine)}" placeholder="opcional" inputmode="decimal" oninput="setLeg(${i},'mine',this.value)"></div>
+      <button class="btn btn-x" title="Quitar" onclick="removeLeg(${i})">✕</button>
+      <div class="leg-meta" id="meta${i}"></div>
+    </div>`).join('');
+  renderResult();
+}
+
+function setLeg(i, k, v) { state.legs[i][k] = v; save(); renderResult(); }
+function addLeg() { state.legs.push(newLeg()); save(); renderLegs(); }
+function removeLeg(i) {
+  state.legs.splice(i, 1);
+  if (!state.legs.length) state.legs.push(newLeg());
+  save(); renderLegs();
+}
+function clearLegs() { state.legs = [newLeg(), newLeg()]; save(); renderLegs(); }
+function onSettings() {
+  state.stake = document.getElementById('stake').value;
+  state.bankroll = document.getElementById('bankroll').value;
+  state.margin = document.getElementById('margin').value;
+  save(); renderResult();
+}
+
+function renderResult() {
+  state.legs.forEach((l, i) => {
+    const meta = document.getElementById('meta' + i);
+    if (!meta) return;
+    const r = legProb(l);
+    document.querySelectorAll(`input[data-i="${i}"]`).forEach(inp => {
+      inp.classList.toggle('bad', !!String(l[inp.dataset.k]).trim() && !toDecimal(l[inp.dataset.k]));
+    });
+    meta.innerHTML = r
+      ? `Decimal <b>${r.dec.toFixed(2)}</b> · implícita <b>${pct(r.implied)}</b> · real <b>${pct(r.p)}</b> (${r.src})`
+      : '';
+  });
+
+  const c = calc();
+  const set = (id, txt, cls) => { const el = document.getElementById(id); el.textContent = txt; el.className = 'stat-value ' + (cls || ''); };
+  const notes = document.getElementById('notes');
+  if (!c) {
+    set('rOdds', '—', 'blue'); set('rPayout', '—'); set('rProb', '—', 'yellow'); set('rEv', '—');
+    notes.innerHTML = '<div class="note">Escribe al menos un momio para ver el cálculo.</div>';
+    return;
+  }
+  set('rOdds', `${toAmerican(c.dec)} (${c.dec.toFixed(2)})`, 'blue');
+  set('rPayout', money(c.payout));
+  set('rProb', pct(c.p, c.p < 0.01 ? 2 : 1), 'yellow');
+  set('rEv', (c.ev >= 0 ? '+' : '') + pct(c.ev), c.ev >= 0 ? 'green' : 'red');
+
+  const out = [];
+  out.push(`<div class="note">Pegas aproximadamente <b>1 de cada ${Math.max(1, Math.round(1 / c.p))}</b> parleys como este. Ganancia si pega: <b>${money(c.payout - c.stake)}</b>.</div>`);
+  if (c.ev < 0) {
+    out.push(`<div class="note bad">Valor esperado negativo: por cada $100 apostados pierdes en promedio <b>${money(-c.ev * 100)}</b>. El margen de la casa se multiplica con cada selección.</div>`);
+  } else {
+    const bank = Math.max(0, Number(state.bankroll) || 0);
+    const q = c.kelly / 4;
+    out.push(`<div class="note good">Valor esperado positivo según tus números. Apuesta sugerida (¼ de Kelly): <b>${pct(q, 2)}</b> del bankroll${bank ? ` = <b>${money(bank * q)}</b>` : ''}. Solo vale si tus probabilidades son realistas.</div>`);
+  }
+  if (c.n >= 5) out.push(`<div class="note warn">${c.n} selecciones es mucho: cada una que agregas baja la probabilidad y sube el margen acumulado. Con 2 o 3 pegas bastante más seguido.</div>`);
+  const bank = Math.max(0, Number(state.bankroll) || 0);
+  if (bank && c.stake > bank * 0.05) out.push(`<div class="note warn">Estás apostando ${pct(c.stake / bank, 0)} de tu bankroll en un solo parley. Lo habitual es no pasar de 1–2%.</div>`);
+  out.push(`<div class="note">El cálculo supone que las selecciones son independientes. Si son del mismo partido (por ejemplo, gana el equipo y anota su delantero) la probabilidad real es distinta.</div>`);
+  notes.innerHTML = out.join('');
+}
+
+function saveParlay() {
+  const c = calc();
+  if (!c) return alert('Agrega al menos un momio válido.');
+  if (!(c.stake > 0)) return alert('Pon el monto de la apuesta.');
+  const names = state.legs.filter(l => toDecimal(l.odds)).map(l => (l.desc.trim() || 'Selección') + ' ' + toAmerican(toDecimal(l.odds)));
+  state.history.unshift({ id: Date.now(), date: new Date().toISOString(), names, dec: c.dec, p: c.p, stake: c.stake, status: 'pending' });
+  save(); renderHistory();
+}
+function setStatus(id, status) {
+  const h = state.history.find(x => x.id === id);
+  if (h) { h.status = status; save(); renderHistory(); }
+}
+function delParlay(id) {
+  if (!confirm('¿Borrar este parley del historial?')) return;
+  state.history = state.history.filter(x => x.id !== id);
+  save(); renderHistory();
+}
+
+function renderHistory() {
+  const done = state.history.filter(h => h.status !== 'pending');
+  const won = done.filter(h => h.status === 'won');
+  const staked = done.reduce((a, h) => a + h.stake, 0);
+  const profit = done.reduce((a, h) => a + (h.status === 'won' ? h.stake * (h.dec - 1) : -h.stake), 0);
+  const set = (id, txt, cls) => { const el = document.getElementById(id); el.textContent = txt; el.className = 'stat-value ' + (cls || ''); };
+  const cls = profit > 0 ? 'green' : profit < 0 ? 'red' : '';
+  set('hRecord', `${won.length}-${done.length - won.length}`);
+  set('hStaked', money(staked));
+  set('hProfit', (profit < 0 ? '-' : '') + money(Math.abs(profit)), cls);
+  set('hRoi', staked ? (profit >= 0 ? '+' : '') + pct(profit / staked) : '—', cls);
+
+  const label = { pending: ['Pendiente', 'yellow'], won: ['Ganado', 'green'], lost: ['Perdido', 'red'] };
+  document.getElementById('history').innerHTML = state.history.length ? state.history.map(h => `
+    <div class="hist-item">
+      <div class="hist-info">
+        <div class="hist-title">${esc(h.names.join(' + '))}</div>
+        <div class="hist-sub">
+          ${new Date(h.date).toLocaleDateString('es-MX')} · ${money(h.stake)} a ${toAmerican(h.dec)} · prob. ${pct(h.p)}
+          · <span class="pill ${label[h.status][1]}">${label[h.status][0]}</span>
+        </div>
+      </div>
+      <div class="hist-actions">
+        <button class="btn btn-secondary btn-sm" onclick="setStatus(${h.id},'won')">✓ Ganó</button>
+        <button class="btn btn-secondary btn-sm" onclick="setStatus(${h.id},'lost')">✗ Perdió</button>
+        <button class="btn btn-x btn-sm" onclick="delParlay(${h.id})">Borrar</button>
+      </div>
+    </div>`).join('') : '<div class="empty">Aún no guardas ningún parley.</div>';
+}
+
+load();
+document.getElementById('stake').value = state.stake;
+document.getElementById('bankroll').value = state.bankroll;
+document.getElementById('margin').value = state.margin;
+renderLegs();
+renderHistory();
+</script>
+</body>
+</html>
